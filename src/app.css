@@ -24,10 +24,9 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow: hidden; /* Prevent scrolling */
 }
 
 h1 {
@@ -40,10 +39,10 @@ h1 {
 }
 
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 button {
@@ -65,3 +64,28 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  h1 {
+    font-size: 1.5em;
+    margin: 0.25em 0;
+  }
+  
+  main {
+    padding: 0.5em;
+  }
+}
+
+html, body {
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+}
