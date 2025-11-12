@@ -12,7 +12,8 @@ export default defineConfig({
   ],
   build: {
     outDir: 'dist',           // Output to dist directory
-    target: 'es2015',         // Target ES2015 for better compatibility
-    polyfillModulePreload: true,
+    modulePreload: {
+      polyfill: true  
+    }
   }
 });
