@@ -81,7 +81,8 @@
     max-width: 90%;
     overflow: hidden;
   }
-  
+
+    /* needs the !important flag to allow compatibility with ios12, otherwise images render too large */ 
   .top-logo img {
     display: block;
     width: 100% !important;

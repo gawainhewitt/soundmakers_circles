@@ -3,9 +3,11 @@
   import ResponsiveContainer from './lib/ResponsiveContainer.svelte';
   import GridContainer from './lib/GridContainer.svelte';
   import SplashScreen from './lib/SplashScreen.svelte';
+  import IconButton from './lib/IconButton.svelte';
+  import OptionsScreen from './lib/OptionsScreen.svelte';
   import { AudioEngine } from './lib/AudioEngine.js';
 
-  let showSplash = true;
+  let currentScreen = 'splash'; // 'splash', 'play', 'about', 'options'
   let audioEngine = null;
   let audioInitialized = false;
 
@@ -23,25 +25,80 @@
       console.log('Audio initialized from splash screen');
     }
     
-    // Hide splash screen
-    showSplash = false;
+    // Show play screen
+    currentScreen = 'play';
+  }
+
+  function gracefullyStopAllNotes() {
+    // Get all active notes and stop them gracefully (with release envelope)
+    if (audioEngine && audioEngine.activeOscillators) {
+      const activeNotes = Array.from(audioEngine.activeOscillators.keys());
+      activeNotes.forEach(note => {
+        audioEngine.stopNote(note);
+      });
+      console.log('Gracefully stopped all notes');
+    }
+  }
+
+  function handleAboutClick() {
+    gracefullyStopAllNotes();
+    currentScreen = 'about';
+  }
+
+  function handleOptionsClick() {
+    gracefullyStopAllNotes();
+    currentScreen = 'options';
+  }
+
+  function handleAboutClose() {
+    currentScreen = 'play';
+  }
+
+  function handleOptionsSave() {
+    currentScreen = 'play';
   }
 </script>
 
-{#if showSplash}
+{#if currentScreen === 'splash'}
   <SplashScreen 
     title="Circles"
     instructions="To play: touch or click screen or use ZXCVBNM,. keys on a keyboard"
     footerNote="On Apple devices, turn off silent mode"
     on:click={handleSplashClick}
   />
-{/if}
+{:else if currentScreen === 'about'}
+  <SplashScreen 
+    title="Circles"
+    instructions="To play: touch or click screen or use ZXCVBNM,. keys on a keyboard"
+    footerNote="On Apple devices, turn off silent mode"
+    on:click={handleAboutClose}
+  />
+{:else if currentScreen === 'options'}
+  <OptionsScreen on:save={handleOptionsSave} />
+{:else if currentScreen === 'play'}
+  <!-- Icon buttons positioned in top corners -->
+  <div style="position: fixed; top: 20px; left: 20px; z-index: 1000;">
+    <IconButton 
+      type="info" 
+      ariaLabel="About"
+      on:click={handleAboutClick}
+    />
+  </div>
+  
+  <div style="position: fixed; top: 20px; right: 70px; z-index: 1000;">
+    <IconButton 
+      type="settings" 
+      ariaLabel="Options"
+      on:click={handleOptionsClick}
+    />
+  </div>
 
-<main>
-  <ResponsiveContainer>
-    <GridContainer {audioEngine} />
-  </ResponsiveContainer>
-</main>
+  <main>
+    <ResponsiveContainer>
+      <GridContainer {audioEngine} />
+    </ResponsiveContainer>
+  </main>
+{/if}
 
 <style>
   main {
