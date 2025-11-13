@@ -1,18 +1,32 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import Circle from './Circle.svelte';
+  import { ScaleGenerator } from './ScaleGenerator.js';
   
   export let audioEngine;
+  export let scaleConfig = { key: 'C', scale: 'major', octave: 4 };
   
-  let circles = Array.from({ length: 9 }, (_, i) => i);
+  let circles = Array.from({ length: 9 }, function(_, i) { return i; });
   let orientation = 'portrait';
   let cleanupInterval;
+  let scaleGenerator = new ScaleGenerator();
   
-  // C Major scale
-  let scale = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5'];
+  // Generate scale based on configuration
+  let scale = [];
+  $: {
+    scale = scaleGenerator.generateScale(
+      scaleConfig.key,
+      scaleConfig.scale,
+      scaleConfig.octave
+    );
+    console.log('Generated scale:', scale);
+    
+    // Reset circle states when scale changes
+    resetCircleStates();
+  }
   
   // Map keyboard keys to circle indices
-  const keyMap = {
+  var keyMap = {
     'z': 0,
     'x': 1,
     'c': 2,
@@ -26,16 +40,25 @@
   
   // Track which circles are pressed
   let circleStates = {};
-  circles.forEach((_, i) => {
-    circleStates[scale[i]] = false;
-  });
+  
+  function resetCircleStates() {
+    circleStates = {};
+    circles.forEach(function(_, i) {
+      if (scale[i]) {
+        circleStates[scale[i]] = false;
+      }
+    });
+  }
   
   // Track which keys are currently held down (prevent key repeat)
   let heldKeys = new Set();
   
   onMount(() => {
+    // Initialize circle states
+    resetCircleStates();
+    
     // Periodic cleanup - check for orphaned oscillators
-    cleanupInterval = setInterval(() => {
+    cleanupInterval = setInterval(function() {
       if (audioEngine) {
         // First do smart cleanup based on circle states
         smartCleanup();
@@ -73,7 +96,7 @@
       console.log('Page hidden - stopping all notes');
       audioEngine.panic();
       // Reset all circle states
-      Object.keys(circleStates).forEach(note => {
+      Object.keys(circleStates).forEach(function(note) {
         circleStates[note] = false;
       });
       heldKeys.clear();
@@ -85,7 +108,7 @@
       console.log('Window blur - stopping all notes');
       audioEngine.panic();
       // Reset all circle states
-      Object.keys(circleStates).forEach(note => {
+      Object.keys(circleStates).forEach(function(note) {
         circleStates[note] = false;
       });
       heldKeys.clear();
@@ -94,10 +117,10 @@
   
   function smartCleanup() {
     // Get all currently playing notes
-    const playingNotes = Array.from(audioEngine.activeOscillators.keys());
+    var playingNotes = Array.from(audioEngine.activeOscillators.keys());
     
     // Stop any notes that are playing but their circle is not pressed
-    playingNotes.forEach(note => {
+    playingNotes.forEach(function(note) {
       if (!circleStates[note]) {
         console.warn('Cleaning up stuck note:', note);
         audioEngine.stopNote(note);
@@ -111,7 +134,7 @@
       if (audioEngine) {
         audioEngine.panic();
         // Reset all circle states
-        Object.keys(circleStates).forEach(note => {
+        Object.keys(circleStates).forEach(function(note) {
           circleStates[note] = false;
         });
         heldKeys.clear();
@@ -120,14 +143,14 @@
     }
     
     // Handle instrument keys (zxcvbnm,.)
-    const key = e.key.toLowerCase();
+    var key = e.key.toLowerCase();
     if (keyMap.hasOwnProperty(key)) {
       // Prevent key repeat - only trigger on first press
       if (heldKeys.has(key)) return;
       heldKeys.add(key);
       
-      const circleIndex = keyMap[key];
-      const note = scale[circleIndex];
+      var circleIndex = keyMap[key];
+      var note = scale[circleIndex];
       
       // Trigger press
       circleStates[note] = true;
@@ -139,12 +162,12 @@
   }
   
   function handleKeyup(e) {
-    const key = e.key.toLowerCase();
+    var key = e.key.toLowerCase();
     if (keyMap.hasOwnProperty(key)) {
       heldKeys.delete(key);
       
-      const circleIndex = keyMap[key];
-      const note = scale[circleIndex];
+      var circleIndex = keyMap[key];
+      var note = scale[circleIndex];
       
       // Trigger release
       circleStates[note] = false;
