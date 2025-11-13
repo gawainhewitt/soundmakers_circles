@@ -1,5 +1,5 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   
   export let title = '';
   export let instructions = '';
@@ -10,6 +10,21 @@
   function handleClick() {
     dispatch('click');
   }
+  
+  function handleKeydown(e) {
+    // Dismiss on any key press
+    dispatch('click');
+  }
+  
+  onMount(() => {
+    // Add global keydown listener
+    window.addEventListener('keydown', handleKeydown);
+  });
+  
+  onDestroy(() => {
+    // Clean up listener
+    window.removeEventListener('keydown', handleKeydown);
+  });
 </script>
 
 <div class="splash-screen" 

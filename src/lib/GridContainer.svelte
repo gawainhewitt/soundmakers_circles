@@ -11,11 +11,27 @@
   // C Major scale
   let scale = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5', 'D5'];
   
+  // Map keyboard keys to circle indices
+  const keyMap = {
+    'z': 0,
+    'x': 1,
+    'c': 2,
+    'v': 3,
+    'b': 4,
+    'n': 5,
+    'm': 6,
+    ',': 7,
+    '.': 8
+  };
+  
   // Track which circles are pressed
   let circleStates = {};
   circles.forEach((_, i) => {
     circleStates[scale[i]] = false;
   });
+  
+  // Track which keys are currently held down (prevent key repeat)
+  let heldKeys = new Set();
   
   onMount(() => {
     // Periodic cleanup - check for orphaned oscillators
@@ -28,8 +44,9 @@
       }
     }, 1000); // Check every 1 second
     
-    // Add global panic button
+    // Add global panic button and keyboard handlers
     window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('keyup', handleKeyup);
     
     // Stop all notes when page loses focus or visibility
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -41,6 +58,7 @@
       clearInterval(cleanupInterval);
     }
     window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('keyup', handleKeyup);
     document.removeEventListener('visibilitychange', handleVisibilityChange);
     window.removeEventListener('blur', handleWindowBlur);
     
@@ -58,6 +76,7 @@
       Object.keys(circleStates).forEach(note => {
         circleStates[note] = false;
       });
+      heldKeys.clear();
     }
   }
   
@@ -69,6 +88,7 @@
       Object.keys(circleStates).forEach(note => {
         circleStates[note] = false;
       });
+      heldKeys.clear();
     }
   }
   
@@ -94,7 +114,44 @@
         Object.keys(circleStates).forEach(note => {
           circleStates[note] = false;
         });
+        heldKeys.clear();
       }
+      return;
+    }
+    
+    // Handle instrument keys (zxcvbnm,.)
+    const key = e.key.toLowerCase();
+    if (keyMap.hasOwnProperty(key)) {
+      // Prevent key repeat - only trigger on first press
+      if (heldKeys.has(key)) return;
+      heldKeys.add(key);
+      
+      const circleIndex = keyMap[key];
+      const note = scale[circleIndex];
+      
+      // Trigger press
+      circleStates[note] = true;
+      if (audioEngine) {
+        audioEngine.playNote(note);
+      }
+      console.log('Key pressed:', key, '→', note);
+    }
+  }
+  
+  function handleKeyup(e) {
+    const key = e.key.toLowerCase();
+    if (keyMap.hasOwnProperty(key)) {
+      heldKeys.delete(key);
+      
+      const circleIndex = keyMap[key];
+      const note = scale[circleIndex];
+      
+      // Trigger release
+      circleStates[note] = false;
+      if (audioEngine) {
+        audioEngine.stopNote(note);
+      }
+      console.log('Key released:', key, '→', note);
     }
   }
   
@@ -138,6 +195,7 @@
       {orientation}
       {audioEngine}
       note={scale[index]}
+      isPressed={circleStates[scale[index]]}
       on:press={handlePress}
       on:release={handleRelease}
     />

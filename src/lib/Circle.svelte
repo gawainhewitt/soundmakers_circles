@@ -13,9 +13,13 @@
   export let isPressed = false;
   let element;
   let activeTouchId = null; // Track which touch is active
+  let localPressed = false; // Track mouse/touch presses separately
+  
+  // Combine external and local pressed states
+  $: effectivePressed = isPressed || localPressed;
   
   function handlePress() {
-    isPressed = true;
+    localPressed = true;
     if (audioEngine) {
       audioEngine.playNote(note);
     }
@@ -23,8 +27,8 @@
   }
   
   function handleRelease() {
-    if (!isPressed) return; // Already released
-    isPressed = false;
+    if (!localPressed) return; // Already released
+    localPressed = false;
     activeTouchId = null; // Clear active touch
     if (audioEngine) {
       audioEngine.stopNote(note);
@@ -108,7 +112,7 @@
   
   // Safety: release on component destroy
   onDestroy(() => {
-    if (isPressed) {
+    if (localPressed) {
       handleRelease();
     }
   });
@@ -121,7 +125,7 @@
 <div
   bind:this={element}
   class="circle {orientation}"
-  style="background-color: {isPressed ? activeColor : color};"
+  style="background-color: {effectivePressed ? activeColor : color};"
   on:mousedown={handlePress}
   on:mouseup={handleRelease}
   on:mouseleave={handleRelease}
