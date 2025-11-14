@@ -229,7 +229,7 @@
   .container {
     display: grid;
     gap: 2vh;
-    padding: 2vh;
+    padding: 7vh 2vh 2vh 2vh;
     height: 100%;
     width: 100%;
     place-items: center;
