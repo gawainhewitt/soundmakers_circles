@@ -235,6 +235,13 @@
     place-items: center;
     place-content: center;
   }
+
+  @media (orientation: landscape) {
+  .container {
+    max-width: 100vh; /* or whatever value works */
+    margin: 0 auto;
+  }
+}
   
   .container.portrait {
     grid-template-columns: repeat(3, 1fr);
